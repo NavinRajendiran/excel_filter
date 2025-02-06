@@ -54,10 +54,13 @@
         const googleSheetUrl = "https://docs.google.com/spreadsheets/d/1CIXqlAczg5xh0eB0D7Itje9fWXG-y0ZtVFVA-lBoWDE/export?format=csv"; 
 	const correctPassword = "mySecurePassword"; 
         let sheetData = [];
+        let sheetDataLower = [];
         let headers = [];
-
+        let worker;
 
         async function fetchSheetData() {
+            document.getElementById('loading').style.display = "block";
+
             try {
                 const response = await fetch(googleSheetUrl);
                 const csv = await response.text();
@@ -65,21 +68,53 @@
             } catch (error) {
                 console.error('Error fetching Google Sheet:', error);
             }
+
+            document.getElementById('loading').style.display = "none";
         }
 
         function parseCSV(csv) {
             const rows = csv.trim().split("\n").map(row => row.split(","));
             headers = rows[0];
             sheetData = rows.slice(1);
-            renderTable(sheetData);
+
+            // Pre-cache lowercase version for fast searching
+            sheetDataLower = sheetData.map(row => row.map(cell => cell.toLowerCase()));
+
+            renderTable(sheetData.slice(0, 100)); // Load only first 100 rows initially
+
+            // Start the worker thread
+            if (window.Worker) {
+                worker = new Worker(URL.createObjectURL(new Blob([`
+                    let sheetDataLower = [];
+
+                    onmessage = function(event) {
+                        if (event.data.type === 'load') {
+                            sheetDataLower = event.data.data;
+                        } else if (event.data.type === 'search') {
+                            const searchText = event.data.query;
+                            const result = sheetDataLower.filter(row => row.some(cell => cell.includes(searchText)));
+                            postMessage(result);
+                        }
+                    };
+                `], { type: 'application/javascript' })));
+                
+                worker.postMessage({ type: 'load', data: sheetDataLower });
+            }
         }
 
         function renderTable(data) {
             const headerRow = document.getElementById('table-header');
             const bodyRow = document.getElementById('table-body');
 
+            // Render headers once
             headerRow.innerHTML = headers.map(header => `<th>${header}</th>`).join("");
-            bodyRow.innerHTML = data.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`).join("");
+
+            // Use a fragment to improve performance
+            let tableHTML = data.map(row => 
+                `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`
+            ).join("");
+
+            bodyRow.innerHTML = tableHTML;
         }
 
         function debounce(func, delay) {
@@ -92,11 +127,20 @@
 
         function searchTable() {
             const searchText = document.getElementById('search-input').value.toLowerCase();
-            const filteredData = sheetData.filter(row => row.some(cell => cell.toLowerCase().includes(searchText)));
-            renderTable(filteredData);
+            if (!searchText) {
+                renderTable(sheetData.slice(0, 100)); // Restore first 100 rows when empty
+                return;
+            }
+
+            if (worker) {
+                worker.postMessage({ type: 'search', query: searchText });
+                worker.onmessage = function(event) {
+                    renderTable(event.data);
+                };
+            }
         }
 
-        document.getElementById('search-input').addEventListener('input', debounce(searchTable, 200));
+        document.getElementById('search-input').addEventListener('input', debounce(searchTable, 100));
 
         fetchSheetData();
 
