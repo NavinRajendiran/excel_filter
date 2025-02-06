@@ -3,65 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search...</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.0/papaparse.min.js"></script>
+    <title>Data Filter</title>
+    
+    <!-- Include basic styling for better presentation -->
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        #content {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
         table, th, td {
-            border: 1px solid black;
+            border: 1px solid #ccc;
             border-collapse: collapse;
             padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        #update-link-container {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+
+        #password-input {
+            width: 250px;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #feedback {
+            color: red;
+            font-weight: bold;
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <h1>Search Data</h1>
+    <div id="content">
+        <h1>Data Filter</h1>
 
-    <!-- Search input field -->
-    <input type="text" id="search-input" placeholder="Search...">
+        <!-- Search input field -->
+		<div style="width:50%">
+			<input type="text" id="search-input" placeholder="Search...">
+		</div>
+        
 
-    <br><br>
+        <br><br>
 
-    <!-- Table to display data -->
-    <table id="excel-table">
-        <thead>
-            <tr id="table-header"></tr>
-        </thead>
-        <tbody id="table-body"></tbody>
-    </table>
+        <!-- Table to display data -->
+        <table id="excel-table">
+            <thead>
+                <tr id="table-header"></tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+
+        <div id="update-link-container">
+            <h3>Update Google Sheet Link</h3>
+            <input type="text" id="password-input" placeholder="Enter password">
+            <button id="update-link-btn">Update Link</button>
+            <p id="feedback"></p>
+        </div>
+    </div>
 
     <script>
-        const googleSheetUrl = "https://docs.google.com/spreadsheets/d/1CIXqlAczg5xh0eB0D7Itje9fWXG-y0ZtVFVA-lBoWDE/export?format=csv"; // Replace with your sheet's CSV link
-         let sheetData = [];
+        // Default Google Sheet URL (editable)
+        let googleSheetUrl = "https://docs.google.com/spreadsheets/d/1l34Jl14hgnv3w9FgT3a8hAkhmft8ehjsqxZ5rd9JH78/export?format=csv"; 
+
+        const correctPassword = "mySecurePassword"; // Define a password for accessing link update
+
+        let sheetData = [];
         let headers = [];
 
         // Fetch CSV from Google Sheets
-        fetch(googleSheetUrl)
-            .then(response => response.text())
-            .then(csv => {
-                parseCSV(csv);
-            })
-            .catch(error => console.error('Error fetching the Google Sheet:', error));
+        fetchSheetData();
+
+        // Function to fetch the data from the sheet
+        function fetchSheetData() {
+            fetch(googleSheetUrl)
+                .then(response => response.text())
+                .then(csv => {
+                    parseCSV(csv);
+                })
+                .catch(error => console.error('Error fetching the Google Sheet:', error));
+        }
 
         // Function to parse CSV data manually
         function parseCSV(csv) {
-            // Split the CSV data into rows
             const rows = csv.split("\n");
-            
-            // Get the headers (first row)
-            headers = rows[0].split(","); // Split by commas for each column
-            
-            // Process remaining rows as data
+            headers = rows[0].split(","); // First row is the header
             sheetData = rows.slice(1).map(row => row.split(","));
-
             renderTable();
         }
 
         // Function to render the table with data
         function renderTable() {
-            // Clear the table
             const headerRow = document.getElementById('table-header');
             const bodyRow = document.getElementById('table-body');
+
+            // Clear previous content
+            headerRow.innerHTML = '';
+            bodyRow.innerHTML = '';
 
             // Add headers to the table
             headers.forEach(header => {
@@ -82,21 +172,18 @@
             });
         }
 
-        // Filter the table based on search input
+        // Search and filter the table based on input
         document.getElementById('search-input').addEventListener('input', function() {
             const searchText = this.value.toLowerCase();
-            const filteredData = sheetData.filter(row => {
-                return row.some(cell => cell.toString().toLowerCase().includes(searchText));
-            });
+            const filteredData = sheetData.filter(row => row.some(cell => cell.toString().toLowerCase().includes(searchText)));
             renderFilteredTable(filteredData);
         });
 
+        // Render filtered table
         function renderFilteredTable(filteredData) {
-            // Clear the table body
             const bodyRow = document.getElementById('table-body');
-            bodyRow.innerHTML = '';
+            bodyRow.innerHTML = ''; // Clear table
 
-            // Add filtered data to the table
             filteredData.forEach(row => {
                 const tr = document.createElement('tr');
                 row.forEach(cell => {
@@ -107,6 +194,28 @@
                 bodyRow.appendChild(tr);
             });
         }
+
+        // Handle password input to update Google Sheets link
+        document.getElementById('update-link-btn').addEventListener('click', function() {
+            const enteredPassword = document.getElementById('password-input').value;
+
+            if (enteredPassword === correctPassword) {
+                var newLink = prompt("Enter the new Google Sheets CSV link:");
+				var updatedLink = newLink
+				if (updatedLink.split('/edit').length > 0) {
+				  var newLink = updatedLink.split('/edit')[0] + '/export?format=csv'
+				}
+
+                if (newLink) {
+                    googleSheetUrl = newLink; // Update the URL
+                    fetchSheetData(); // Re-fetch the data with the new link
+                    document.getElementById('feedback').style.display = 'none';
+                }
+            } else {
+                document.getElementById('feedback').textContent = "Incorrect password!";
+                document.getElementById('feedback').style.display = 'block';
+            }
+        });
     </script>
 
 </body>
