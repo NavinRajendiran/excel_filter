@@ -1,0 +1,228 @@
+<!-- <!DOCTYPE html> -->
+<!-- <html lang="en"> -->
+<!-- <head> -->
+    <!-- <meta charset="UTF-8"> -->
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <!-- <title>Excel Filter Search</title> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script> -->
+    <!-- <style> -->
+        <!-- table, th, td { -->
+            <!-- border: 1px solid black; -->
+            <!-- border-collapse: collapse; -->
+            <!-- padding: 8px; -->
+        <!-- } -->
+    <!-- </style> -->
+<!-- </head> -->
+<!-- <body> -->
+
+    <!-- <h1>Search and Filter Excel Data</h1> -->
+
+    
+    <!-- <input type="file" id="excel-file" accept=".xlsx, .xls, .csv" /> -->
+    
+    
+    <!-- <input type="text" id="search-input" placeholder="Search..."> -->
+
+    <!-- <br><br> -->
+
+    <!-- <table id="excel-table"> -->
+        <!-- <thead> -->
+            <!-- <tr id="table-header"></tr> -->
+        <!-- </thead> -->
+        <!-- <tbody id="table-body"></tbody> -->
+    <!-- </table> -->
+
+    <!-- <script> -->
+        <!-- document.getElementById('excel-file').addEventListener('change', handleFileUpload, false); -->
+        <!-- document.getElementById('search-input').addEventListener('input', filterTable, false); -->
+
+        <!-- let excelData = []; -->
+        <!-- let headers = []; -->
+
+        <!-- function handleFileUpload(event) { -->
+            <!-- const file = event.target.files[0]; -->
+            <!-- if (file) { -->
+                <!-- const reader = new FileReader(); -->
+                <!-- reader.onload = function (e) { -->
+                    <!-- const data = e.target.result; -->
+                    <!-- const workbook = XLSX.read(data, { type: 'binary' }); -->
+					<!-- console.log(workbook) -->
+                    <!-- // Assuming the first sheet is the one we want -->
+                    <!-- const sheet = workbook.Sheets[workbook.SheetNames[0]]; -->
+                    <!-- excelData = XLSX.utils.sheet_to_json(sheet, { header: 1 }); -->
+                    <!-- console.log("excelData",excelData) -->
+                    <!-- // Extract headers and data -->
+                    <!-- headers = excelData[0]; -->
+                    <!-- excelData = excelData.slice(1); // Remove the header row -->
+
+                    <!-- renderTable(); -->
+                <!-- }; -->
+                <!-- reader.readAsBinaryString(file); -->
+            <!-- } -->
+        <!-- } -->
+
+        <!-- function renderTable() { -->
+            <!-- // Clear the table -->
+            <!-- const headerRow = document.getElementById('table-header'); -->
+            <!-- const bodyRow = document.getElementById('table-body'); -->
+
+            <!-- // Add headers to the table -->
+            <!-- headers.forEach(header => { -->
+                <!-- const th = document.createElement('th'); -->
+                <!-- th.textContent = header; -->
+                <!-- headerRow.appendChild(th); -->
+            <!-- }); -->
+
+            <!-- // Add data to the table -->
+            <!-- excelData.forEach(row => { -->
+                <!-- const tr = document.createElement('tr'); -->
+                <!-- row.forEach(cell => { -->
+                    <!-- const td = document.createElement('td'); -->
+                    <!-- td.textContent = cell; -->
+                    <!-- tr.appendChild(td); -->
+                <!-- }); -->
+                <!-- bodyRow.appendChild(tr); -->
+            <!-- }); -->
+        <!-- } -->
+
+        <!-- function filterTable() { -->
+            <!-- const searchText = document.getElementById('search-input').value.toLowerCase(); -->
+            <!-- const filteredData = excelData.filter(row => { -->
+                <!-- return row.some(cell => cell.toString().toLowerCase().includes(searchText)); -->
+            <!-- }); -->
+            <!-- renderFilteredTable(filteredData); -->
+        <!-- } -->
+
+        <!-- function renderFilteredTable(filteredData) { -->
+            <!-- // Clear the table body -->
+            <!-- const bodyRow = document.getElementById('table-body'); -->
+            <!-- bodyRow.innerHTML = ''; -->
+
+            <!-- // Add filtered data to the table -->
+            <!-- filteredData.forEach(row => { -->
+                <!-- const tr = document.createElement('tr'); -->
+                <!-- row.forEach(cell => { -->
+                    <!-- const td = document.createElement('td'); -->
+                    <!-- td.textContent = cell; -->
+                    <!-- tr.appendChild(td); -->
+                <!-- }); -->
+                <!-- bodyRow.appendChild(tr); -->
+            <!-- }); -->
+        <!-- } -->
+    <!-- </script> -->
+
+<!-- </body> -->
+<!-- </html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets Search and Filter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.3.0/papaparse.min.js"></script>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Search and Filter Google Sheets Data</h1>
+
+    <!-- Search input field -->
+    <input type="text" id="search-input" placeholder="Search...">
+
+    <br><br>
+
+    <!-- Table to display data -->
+    <table id="excel-table">
+        <thead>
+            <tr id="table-header"></tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+    </table>
+
+    <script>
+        const googleSheetUrl = "https://docs.google.com/spreadsheets/d/1CIXqlAczg5xh0eB0D7Itje9fWXG-y0ZtVFVA-lBoWDE/export?format=csv"; // Replace with your sheet's CSV link
+         let sheetData = [];
+        let headers = [];
+
+        // Fetch CSV from Google Sheets
+        fetch(googleSheetUrl)
+            .then(response => response.text())
+            .then(csv => {
+                parseCSV(csv);
+            })
+            .catch(error => console.error('Error fetching the Google Sheet:', error));
+
+        // Function to parse CSV data manually
+        function parseCSV(csv) {
+            // Split the CSV data into rows
+            const rows = csv.split("\n");
+            
+            // Get the headers (first row)
+            headers = rows[0].split(","); // Split by commas for each column
+            
+            // Process remaining rows as data
+            sheetData = rows.slice(1).map(row => row.split(","));
+
+            renderTable();
+        }
+
+        // Function to render the table with data
+        function renderTable() {
+            // Clear the table
+            const headerRow = document.getElementById('table-header');
+            const bodyRow = document.getElementById('table-body');
+
+            // Add headers to the table
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+
+            // Add data to the table
+            sheetData.forEach(row => {
+                const tr = document.createElement('tr');
+                row.forEach(cell => {
+                    const td = document.createElement('td');
+                    td.textContent = cell;
+                    tr.appendChild(td);
+                });
+                bodyRow.appendChild(tr);
+            });
+        }
+
+        // Filter the table based on search input
+        document.getElementById('search-input').addEventListener('input', function() {
+            const searchText = this.value.toLowerCase();
+            const filteredData = sheetData.filter(row => {
+                return row.some(cell => cell.toString().toLowerCase().includes(searchText));
+            });
+            renderFilteredTable(filteredData);
+        });
+
+        function renderFilteredTable(filteredData) {
+            // Clear the table body
+            const bodyRow = document.getElementById('table-body');
+            bodyRow.innerHTML = '';
+
+            // Add filtered data to the table
+            filteredData.forEach(row => {
+                const tr = document.createElement('tr');
+                row.forEach(cell => {
+                    const td = document.createElement('td');
+                    td.textContent = cell;
+                    tr.appendChild(td);
+                });
+                bodyRow.appendChild(tr);
+            });
+        }
+    </script>
+
+</body>
+</html>
