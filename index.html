@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Sheets Search and Filter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>Data Filter</title>
     
     <style>
         table, th, td {
@@ -13,28 +14,41 @@
         }
     </style>
 </head>
-<body>
+<body class="container">
 
-    <h1>Search and Filter Google Sheets Data</h1>
-
-    <!-- Search input field -->
-    <input type="text" id="search-input" placeholder="Search...">
+	<div class="w-100 d-flex col-12">
+		<div class="col-6 align-self-center">
+			<h1>Filter Warehouse Data</h1>
+			<div class="input-group mb-3 w-50">
+			  <input class="form-control" type="text" id="search-input" placeholder="Search...">
+			</div>
+		</div>
+		<div class="col-6 m-auto">
+			<h5>Update Google Sheet Link</h5>
+			<div id="update-link-container" class="d-flex justify-content-between">
+				<div class="input-group mb-3 w-50">
+					<input type="text" id="password-input" class="form-control" placeholder="Enter password">
+				</div>
+				<div>
+				<button id="update-link-btn " class="btn btn-primary" >Update Link</button>
+				<p id="feedback"></p>
+				</div>
+			</div>
+		</div>
+	</div>
 
     <br><br>
 
     <!-- Table to display data -->
-    <table id="excel-table">
-        <thead>
+    <div class="table-responsive" style="height:70vh;">
+    <table id="excel-table table" class="table table-hover table-striped" >
+        <thead  class="table-primary" style="position:sticky;top:0;">
             <tr id="table-header"></tr>
         </thead>
         <tbody id="table-body"></tbody>
     </table>
-	<div id="update-link-container">
-            <h3>Update Google Sheet Link</h3>
-            <input type="text" id="password-input" placeholder="Enter password to update link">
-            <button id="update-link-btn">Update Link</button>
-            <p id="feedback"></p>
-        </div>
+    </div>
+	
     <script>
         // Replace with your actual Google Sheet's export CSV link
         const googleSheetUrl = "https://docs.google.com/spreadsheets/d/1CIXqlAczg5xh0eB0D7Itje9fWXG-y0ZtVFVA-lBoWDE/export?format=csv"; 
