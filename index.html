@@ -51,17 +51,15 @@
 	
     <script>
         // Replace with your actual Google Sheet's export CSV link
-        const googleSheetUrl = "https://docs.google.com/spreadsheets/d/1CIXqlAczg5xh0eB0D7Itje9fWXG-y0ZtVFVA-lBoWDE/export?format=csv"; 
+        const googleLink = "https://docs.google.com/spreadsheets/d/1CIXqlAczg5xh0eB0D7Itje9fWXG-y0ZtVFVA-lBoWDE/export?format=csv"; 
 	const correctPassword = "mySecurePassword"; 
-       let sheetData = [];
-        let sheetDataLower = [];
+       let googleSheetUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(googleLink);
+
+        let sheetData = [];
         let headers = [];
-        let visibleRows = 50; // Load only 50 rows at a time for mobile performance
-        let startIndex = 0;
 
         async function fetchSheetData() {
             document.getElementById('loading').style.display = "block";
-
             try {
                 const response = await fetch(googleSheetUrl);
                 const csv = await response.text();
@@ -69,7 +67,6 @@
             } catch (error) {
                 console.error('Error fetching Google Sheet:', error);
             }
-
             document.getElementById('loading').style.display = "none";
         }
 
@@ -77,21 +74,15 @@
             const rows = csv.trim().split("\n").map(row => row.split(","));
             headers = rows[0];
             sheetData = rows.slice(1);
-
-            // Pre-cache lowercase version for fast searching
-            sheetDataLower = sheetData.map(row => row.map(cell => cell.toLowerCase()));
-
-            renderTable(sheetData.slice(0, visibleRows)); // Load only first 50 rows initially
+            renderTable(sheetData.slice(0, 50)); // Load first 50 rows initially
         }
 
         function renderTable(data) {
             const headerRow = document.getElementById('table-header');
             const bodyRow = document.getElementById('table-body');
 
-            // Render headers once
             headerRow.innerHTML = headers.map(header => `<th>${header}</th>`).join("");
 
-            // Use a fragment to improve performance
             let tableHTML = data.map(row => 
                 `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`
             ).join("");
@@ -99,49 +90,18 @@
             bodyRow.innerHTML = tableHTML;
         }
 
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
-
         function searchTable() {
             const searchText = document.getElementById('search-input').value.toLowerCase();
             if (!searchText) {
-                renderTable(sheetData.slice(0, visibleRows)); // Restore first 50 rows when empty
+                renderTable(sheetData.slice(0, 50));
                 return;
             }
 
-            const filteredData = sheetData.filter((row, index) => 
-                sheetDataLower[index].some(cell => cell.includes(searchText))
-            );
-
-            renderTable(filteredData.slice(0, visibleRows)); // Show only first 50 matching results
+            const filteredData = sheetData.filter(row => row.some(cell => cell.toLowerCase().includes(searchText)));
+            renderTable(filteredData.slice(0, 50));
         }
 
-        function loadMoreRows() {
-            startIndex += visibleRows;
-            const newRows = sheetData.slice(startIndex, startIndex + visibleRows);
-            if (newRows.length === 0) return;
-
-            const bodyRow = document.getElementById('table-body');
-            let tableHTML = newRows.map(row => 
-                `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`
-            ).join("");
-
-            bodyRow.innerHTML += tableHTML;
-        }
-
-        document.getElementById('search-input').addEventListener('input', debounce(searchTable, 100));
-
-        document.getElementById('table-container').addEventListener('scroll', function() {
-            if (this.scrollTop + this.clientHeight >= this.scrollHeight - 10) {
-                loadMoreRows();
-            }
-        });
-
+        document.getElementById('search-input').addEventListener('input', searchTable);
         fetchSheetData();
 
 	    // Handle password input to update Google Sheets link
