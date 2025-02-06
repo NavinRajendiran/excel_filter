@@ -51,15 +51,15 @@
 	
     <script>
         // Replace with your actual Google Sheet's export CSV link
-        const googleLink = "https://docs.google.com/spreadsheets/d/1CIXqlAczg5xh0eB0D7Itje9fWXG-y0ZtVFVA-lBoWDE/export?format=csv"; 
+        const googleSheetUrl = "https://docs.google.com/spreadsheets/d/1CIXqlAczg5xh0eB0D7Itje9fWXG-y0ZtVFVA-lBoWDE/export?format=csv"; 
 	const correctPassword = "mySecurePassword"; 
-       let googleSheetUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(googleLink);
+       //let googleSheetUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(googleLink);
 
-        let sheetData = [];
+         let sheetData = [];
+        let sheetDataLower = [];
         let headers = [];
 
         async function fetchSheetData() {
-            document.getElementById('loading').style.display = "block";
             try {
                 const response = await fetch(googleSheetUrl);
                 const csv = await response.text();
@@ -67,22 +67,27 @@
             } catch (error) {
                 console.error('Error fetching Google Sheet:', error);
             }
-            document.getElementById('loading').style.display = "none";
         }
 
         function parseCSV(csv) {
             const rows = csv.trim().split("\n").map(row => row.split(","));
             headers = rows[0];
             sheetData = rows.slice(1);
-            renderTable(sheetData.slice(0, 50)); // Load first 50 rows initially
+            
+            // Pre-cache lowercase version for fast searching
+            sheetDataLower = sheetData.map(row => row.map(cell => cell.toLowerCase()));
+
+            renderTable(sheetData);
         }
 
         function renderTable(data) {
             const headerRow = document.getElementById('table-header');
             const bodyRow = document.getElementById('table-body');
 
+            // Render headers once
             headerRow.innerHTML = headers.map(header => `<th>${header}</th>`).join("");
 
+            // Use a fragment to improve performance
             let tableHTML = data.map(row => 
                 `<tr>${row.map(cell => `<td>${cell}</td>`).join("")}</tr>`
             ).join("");
@@ -90,18 +95,31 @@
             bodyRow.innerHTML = tableHTML;
         }
 
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
         function searchTable() {
             const searchText = document.getElementById('search-input').value.toLowerCase();
             if (!searchText) {
-                renderTable(sheetData.slice(0, 50));
+                renderTable(sheetData); // Restore full data when empty
                 return;
             }
 
-            const filteredData = sheetData.filter(row => row.some(cell => cell.toLowerCase().includes(searchText)));
-            renderTable(filteredData.slice(0, 50));
+            // Use pre-lowered data for efficient matching
+            const filteredData = sheetData.filter((row, index) => 
+                sheetDataLower[index].some(cell => cell.includes(searchText))
+            );
+
+            renderTable(filteredData);
         }
 
-        document.getElementById('search-input').addEventListener('input', searchTable);
+        document.getElementById('search-input').addEventListener('input', debounce(searchTable, 100));
+
         fetchSheetData();
 
 	    // Handle password input to update Google Sheets link
