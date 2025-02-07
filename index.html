@@ -117,8 +117,9 @@ function debounce(func, delay) {
 
 function searchTable() {
     const searchText = searchInput.value.toLowerCase();
+
     if (!searchText) {
-        renderTable(sheetData.slice(0, 50)); // Restore first 50 rows when search is empty
+        renderTable(sheetData); // Restore full data when search is empty
         return;
     }
 
@@ -127,8 +128,9 @@ function searchTable() {
         sheetDataLower[index].some(cell => cell.includes(searchText))
     );
 
-    renderTable(filteredData.slice(0, 200)); // Show only 200 results for performance
+    requestAnimationFrame(() => renderTable(filteredData)); // Non-blocking rendering
 }
+
 
 // Apply debounce (250ms for better mobile experience)
 searchInput.addEventListener("input", debounce(searchTable, 250));
