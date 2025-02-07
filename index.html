@@ -117,11 +117,16 @@ function debounce(func, delay) {
     };
 }
 
+let searchTimeout; // Store the timeout reference
+
 function searchTable() {
     const searchText = searchInput.value.toLowerCase();
     
+    // Cancel any ongoing batch appending
+    if (searchTimeout) clearTimeout(searchTimeout);
+
     if (!searchText) {
-        renderTable(sheetData.slice(0, 50)); // Show first 50 rows when search is empty
+        renderTable(sheetData.slice(0, 50)); // Show first 50 rows when empty
         return;
     }
 
@@ -130,7 +135,7 @@ function searchTable() {
         sheetDataLower[index].some(cell => cell.includes(searchText))
     );
 
-    // Render first 50 instantly
+    // Render first 50 results instantly
     renderTable(filteredData.slice(0, 50));
 
     // Append remaining records in chunks of 100
@@ -142,12 +147,13 @@ function searchTable() {
         renderTable(filteredData.slice(0, batchIndex + 100));
         batchIndex += 100;
 
-        // Schedule next batch
-        setTimeout(appendBatch, 100); // Append every 100ms
+        // Schedule next batch, but allow canceling if search changes
+        searchTimeout = setTimeout(appendBatch, 100);
     }
 
     requestAnimationFrame(appendBatch); // Start batch loading
 }
+
 
 
 // Apply debounce (250ms for better mobile experience)
