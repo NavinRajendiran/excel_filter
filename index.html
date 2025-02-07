@@ -61,6 +61,7 @@ let headers = [];
 const tableBody = document.getElementById("table-body");
 const tableHeader = document.getElementById("table-header");
 const searchInput = document.getElementById("search-input");
+const loading = document.getElementById("loading");
 
 async function fetchSheetData() {
     try {
@@ -81,6 +82,7 @@ function parseCSV(csv) {
     sheetDataLower = sheetData.map(row => row.map(cell => cell.toLowerCase()));
 
     renderTable(sheetData.slice(0, 50)); // Load first 50 rows initially (Lazy Load)
+	loading.style.dispaly = 'none'
 }
 
 function renderTable(data) {
@@ -119,7 +121,7 @@ function searchTable() {
     const searchText = searchInput.value.toLowerCase();
 
     if (!searchText) {
-        renderTable(sheetData); // Restore full data when search is empty
+        renderTable(sheetData.slice(0, 50)); // Restore full data when search is empty
         return;
     }
 
