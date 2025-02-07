@@ -119,9 +119,9 @@ function debounce(func, delay) {
 
 function searchTable() {
     const searchText = searchInput.value.toLowerCase();
-
+    
     if (!searchText) {
-        renderTable(sheetData.slice(0, 50)); // Restore full data when search is empty
+        renderTable(sheetData.slice(0, 50)); // Show first 50 rows when search is empty
         return;
     }
 
@@ -130,7 +130,23 @@ function searchTable() {
         sheetDataLower[index].some(cell => cell.includes(searchText))
     );
 
-    requestAnimationFrame(() => renderTable(filteredData)); // Non-blocking rendering
+    // Render first 50 instantly
+    renderTable(filteredData.slice(0, 50));
+
+    // Append remaining records in chunks of 100
+    let batchIndex = 50;
+    function appendBatch() {
+        if (batchIndex >= filteredData.length) return;
+
+        // Append next 100 rows
+        renderTable(filteredData.slice(0, batchIndex + 100));
+        batchIndex += 100;
+
+        // Schedule next batch
+        setTimeout(appendBatch, 100); // Append every 100ms
+    }
+
+    requestAnimationFrame(appendBatch); // Start batch loading
 }
 
 
