@@ -82,7 +82,7 @@ function parseCSV(csv) {
     sheetDataLower = sheetData.map(row => row.map(cell => cell.toLowerCase()));
 
     renderTable(sheetData.slice(0, 50)); // Load first 50 rows initially (Lazy Load)
-	loading.style.dispaly = 'none'
+	loading.style.display = 'none'
 }
 
 function renderTable(data) {
